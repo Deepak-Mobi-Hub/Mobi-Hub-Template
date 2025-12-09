@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobi-Hub Template Generator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Oswald:wght@500;700&family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* Preview Container */
+        .preview-wrapper {
+            background-color: #e5e7eb;
+            border: 4px dashed #d1d5db;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 650px; 
+            position: relative;
+            width: 100%;
+        }
+
+        /* The Card Container to be captured */
+        #capture-area {
+            /* Default dimensions, updated by JS */
+            width: 1080px; 
+            height: 1080px; 
+            transform-origin: center center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease, padding 0.3s ease;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Dynamic Font Classes */
+        .font-modern { font-family: 'Inter', sans-serif; }
+        .font-bold-display { font-family: 'Oswald', sans-serif; }
+        .font-elegant { font-family: 'Playfair Display', serif; }
+        .font-tech { font-family: 'Roboto Mono', monospace; }
+        .font-geometric { font-family: 'Montserrat', sans-serif; }
+        
+        .pattern-grid {
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .pattern-geo {
+            background-image: linear-gradient(30deg, #ffffff10 12%, transparent 12.5%, transparent 87%, #ffffff10 87.5%, #ffffff10), linear-gradient(150deg, #ffffff10 12%, transparent 12.5%, transparent 87%, #ffffff10 87.5%, #ffffff10), linear-gradient(30deg, #ffffff10 12%, transparent 12.5%, transparent 87%, #ffffff10 87.5%, #ffffff10), linear-gradient(150deg, #ffffff10 12%, transparent 12.5%, transparent 87%, #ffffff10 87.5%, #ffffff10), linear-gradient(60deg, #ffffff10 25%, transparent 25.5%, transparent 75%, #ffffff10 75%, #ffffff10), linear-gradient(60deg, #ffffff10 25%, transparent 25.5%, transparent 75%, #ffffff10 75%, #ffffff10);
+            background-size: 80px 140px;
+            background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+        }
+
+        /* Custom Scrollbar for device list in preview */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-mobile-screen-button text-blue-600 text-2xl mr-2"></i>
+                    <h1 class="text-xl font-bold text-gray-900">Mobi-Hub <span class="text-blue-600">Generator</span></h1>
+                </div>
+                
+                <div class="flex gap-2">
+                     <button onclick="downloadImage()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow flex items-center gap-2 transition">
+                        <span>Download JPEG</span>
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Controls -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Input Form -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-lg font-semibold">Deal Details</h2>
+                    </div>
+
+                    <!-- Mode Switcher -->
+                    <div class="flex bg-gray-100 p-1 rounded-lg mb-6">
+                        <button onclick="setMode('single')" id="btn-single" class="flex-1 py-2 rounded-md text-sm font-bold bg-white shadow text-blue-600 transition">Single Device</button>
+                        <button onclick="setMode('multi')" id="btn-multi" class="flex-1 py-2 rounded-md text-sm font-bold text-gray-500 hover:bg-white/50 transition">Multiple List</button>
+                    </div>
+                    
+                    <!-- Single Device Inputs -->
+                    <div id="single-mode-inputs" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <select id="singleBrand" onchange="updateSingleModelList()" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="apple">Apple</option>
+                                    <option value="samsung">Samsung</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Model Name</label>
+                                <select id="singleModel" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Populated JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Storage</label>
+                                <select id="singleStorage" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="64GB">64GB</option>
+                                    <option value="128GB" selected>128GB</option>
+                                    <option value="256GB">256GB</option>
+                                    <option value="512GB">512GB</option>
+                                    <option value="1TB">1TB</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price / Text</label>
+                                <input type="text" id="singlePrice" value="900" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-600">
+                                <div class="mt-2 flex items-center">
+                                    <input type="checkbox" id="encryptPrice" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <label for="encryptPrice" class="ml-2 text-sm text-gray-600 font-medium cursor-pointer" title="Masks last 2 digits (e.g. 900 -> 9xx)">Encrypt Price</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Features (Comma Separated)</label>
+                            <input type="text" id="singleFeatures" placeholder="e.g. 5G, OLED, 120Hz" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Multiple List Inputs -->
+                    <div id="multi-mode-inputs" class="hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="encryptPriceMulti" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                <label for="encryptPriceMulti" class="ml-2 text-sm font-bold text-blue-700 cursor-pointer">Encrypt All Prices</label>
+                            </div>
+                             <button onclick="addDevice()" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition flex items-center gap-1 font-semibold">
+                                <i class="fa-solid fa-plus"></i> Add Device
+                            </button>
+                        </div>
+                        <div id="devices-container" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                            <!-- Device entries will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t">
+                        <!-- Global Settings -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Region/Spec</label>
+                                <select id="specInput" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="EU Spec" selected>EU Spec</option>
+                                    <option value="US Spec">US Spec (LL/A)</option>
+                                    <option value="Canada Spec">Canada Spec</option>
+                                    <option value="UK Spec">UK Spec</option>
+                                    <option value="JP Spec">JP Spec</option>
+                                    <option value="HK Spec">HK Dual Sim</option>
+                                    <option value="Global">Global</option>
+                                    <option value="Middle East">Middle East (TRA)</option>
+                                    <option value="Other Spec">Other Spec</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Grade/Condition</label>
+                                <select id="gradeInput" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="NEW">Brand New</option>
+                                    <option value="ASIS">ASIS</option>
+                                    <option value="ASIS PLUS">ASIS Plus</option>
+                                    <option value="A+">Grade A+</option>
+                                    <option value="A">Grade A</option>
+                                    <option value="B">Grade B</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Info -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sub-heading / Notes</label>
+                            <input type="text" id="noteInput" value="Limited Stock Available" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        </div>
+
+                        <!-- WhatsApp -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    <i class="fa-brands fa-whatsapp text-green-600"></i>
+                                </span>
+                                <input type="text" id="whatsappInput" placeholder="e.g. 1234567890" class="w-full rounded-r-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Chat link active in preview & copied text.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-lg font-semibold mb-4 border-b pb-2">Design</h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mobi-Hub Logo</label>
+                        <input type="file" id="logoUpload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"/>
+                        <p class="text-xs text-gray-400 mt-1">Default is text logo. Upload to replace.</p>
+                    </div>
+
+                    <!-- Font Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Font Style</label>
+                        <select id="fontInput" onchange="updateFont()" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 font-semibold">
+                            <option value="font-bold-display">Bold Display (Default)</option>
+                            <option value="font-modern">Modern Sans (Inter)</option>
+                            <option value="font-elegant">Elegant Serif (Playfair)</option>
+                            <option value="font-geometric">Geometric (Montserrat)</option>
+                            <option value="font-tech">Tech Mono (Roboto)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Image Format</label>
+                            <select id="formatInput" onchange="updateFormat()" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="square">Square Post (1080 x 1080)</option>
+                                <option value="portrait">Portrait Post (1080 x 1350)</option>
+                                <option value="story">WhatsApp Story (1080 x 1920)</option>
+                                <option value="landscape">Landscape Full HD (1920 x 1080)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Background</label>
+                            <select id="bgStyleInput" onchange="updateBackground()" class="w-full rounded-lg border-gray-300 border p-2">
+                                <option value="gradient">Modern Gradient</option>
+                                <option value="mesh">Mesh Gradient</option>
+                                <option value="neon">Neon Dark</option>
+                                <option value="pastel">Soft Pastel</option>
+                                <option value="geometric">Geometric</option>
+                                <option value="solid">Solid Minimal</option>
+                                <option value="dark">Dark Mode</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Theme Color</label>
+                        <div class="flex flex-wrap gap-2">
+                            <!-- Original Colors -->
+                            <button onclick="changeTheme('purple')" class="w-8 h-8 rounded-full bg-purple-600 ring-offset-2 hover:ring-2 ring-purple-500 transition shadow-sm" title="Purple"></button>
+                            <button onclick="changeTheme('blue')" class="w-8 h-8 rounded-full bg-blue-600 ring-offset-2 hover:ring-2 ring-blue-500 transition shadow-sm" title="Blue"></button>
+                            <button onclick="changeTheme('cyan')" class="w-8 h-8 rounded-full bg-cyan-500 ring-offset-2 hover:ring-2 ring-cyan-400 transition shadow-sm" title="Cyan"></button>
+                            <button onclick="changeTheme('teal')" class="w-8 h-8 rounded-full bg-teal-500 ring-offset-2 hover:ring-2 ring-teal-400 transition shadow-sm" title="Teal"></button>
+                            <button onclick="changeTheme('green')" class="w-8 h-8 rounded-full bg-emerald-600 ring-offset-2 hover:ring-2 ring-emerald-500 transition shadow-sm" title="Green"></button>
+                            <button onclick="changeTheme('gold')" class="w-8 h-8 rounded-full bg-yellow-500 ring-offset-2 hover:ring-2 ring-yellow-400 transition shadow-sm" title="Gold"></button>
+                            <button onclick="changeTheme('orange')" class="w-8 h-8 rounded-full bg-orange-500 ring-offset-2 hover:ring-2 ring-orange-400 transition shadow-sm" title="Orange"></button>
+                            <button onclick="changeTheme('red')" class="w-8 h-8 rounded-full bg-red-600 ring-offset-2 hover:ring-2 ring-red-500 transition shadow-sm" title="Red"></button>
+                            <button onclick="changeTheme('rose')" class="w-8 h-8 rounded-full bg-rose-500 ring-offset-2 hover:ring-2 ring-rose-400 transition shadow-sm" title="Rose"></button>
+                            <button onclick="changeTheme('midnight')" class="w-8 h-8 rounded-full bg-indigo-900 ring-offset-2 hover:ring-2 ring-indigo-700 transition shadow-sm" title="Midnight"></button>
+                            <button onclick="changeTheme('slate')" class="w-8 h-8 rounded-full bg-slate-600 ring-offset-2 hover:ring-2 ring-slate-500 transition shadow-sm" title="Slate"></button>
+                            <button onclick="changeTheme('black')" class="w-8 h-8 rounded-full bg-gray-900 ring-offset-2 hover:ring-2 ring-gray-600 transition shadow-sm" title="Black"></button>
+                            
+                            <!-- New Promotional Colors -->
+                            <button onclick="changeTheme('crimson')" class="w-8 h-8 rounded-full bg-red-700 ring-offset-2 hover:ring-2 ring-red-600 transition shadow-sm" title="Crimson (Sale)"></button>
+                            <button onclick="changeTheme('cyber')" class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 ring-offset-2 hover:ring-2 ring-fuchsia-400 transition shadow-sm" title="Cyber"></button>
+                            <button onclick="changeTheme('lemon')" class="w-8 h-8 rounded-full bg-lime-400 ring-offset-2 hover:ring-2 ring-lime-500 transition shadow-sm" title="Lemon"></button>
+                            <button onclick="changeTheme('coral')" class="w-8 h-8 rounded-full bg-red-400 ring-offset-2 hover:ring-2 ring-orange-400 transition shadow-sm" title="Coral"></button>
+                            <button onclick="changeTheme('lavender')" class="w-8 h-8 rounded-full bg-violet-400 ring-offset-2 hover:ring-2 ring-violet-300 transition shadow-sm" title="Lavender"></button>
+                            <button onclick="changeTheme('royal')" class="w-8 h-8 rounded-full bg-blue-900 ring-offset-2 hover:ring-2 ring-blue-800 transition shadow-sm" title="Royal"></button>
+                            <button onclick="changeTheme('mint')" class="w-8 h-8 rounded-full bg-emerald-300 ring-offset-2 hover:ring-2 ring-emerald-400 transition shadow-sm" title="Mint"></button>
+                            <button onclick="changeTheme('bronze')" class="w-8 h-8 rounded-full bg-yellow-700 ring-offset-2 hover:ring-2 ring-yellow-600 transition shadow-sm" title="Bronze"></button>
+                            <button onclick="changeTheme('steel')" class="w-8 h-8 rounded-full bg-slate-500 ring-offset-2 hover:ring-2 ring-slate-400 transition shadow-sm" title="Steel"></button>
+                            <button onclick="changeTheme('candy')" class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-cyan-400 ring-offset-2 hover:ring-2 ring-pink-400 transition shadow-sm" title="Candy"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Actions -->
+                <button onclick="downloadImage()" id="downloadBtnBottom" class="w-full py-4 bg-gray-800 hover:bg-black text-white font-bold rounded-xl shadow-lg transform hover:-translate-y-1 transition flex justify-center items-center gap-2">
+                    Download JPEG Template <i class="fa-solid fa-download ml-1"></i>
+                </button>
+                
+                <div id="statusMessage" class="hidden p-3 rounded-lg text-center text-sm font-medium"></div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Preview -->
+            <div class="lg:col-span-7">
+                <div class="sticky top-24">
+                    <div class="flex justify-between items-end mb-2">
+                        <h2 class="text-lg font-semibold text-gray-700">Live Preview</h2>
+                        <span id="resDisplay" class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">1080x1080px</span>
+                    </div>
+                    
+                    <!-- Preview Container Wrapper -->
+                    <div id="previewContainer" class="preview-wrapper">
+                        
+                        <!-- THE CANVAS (Scaled via JS) -->
+                        <div id="capture-area" class="relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-between p-12 shadow-2xl overflow-hidden">
+                            
+                            <!-- Background Elements -->
+                            <div id="bgPattern" class="absolute inset-0 pattern-grid opacity-30"></div>
+                            <div class="absolute -top-20 -left-20 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
+                            <div class="absolute -bottom-20 -right-20 w-96 h-96 bg-black opacity-10 rounded-full blur-3xl"></div>
+
+                            <!-- Main Card Content -->
+                            <div id="mainCard" class="relative w-full h-full glass-panel rounded-3xl border border-white/30 flex flex-col p-10 text-white shadow-2xl transition-all">
+                                
+                                <!-- Header -->
+                                <div class="flex justify-between items-center mb-8">
+                                    <div class="bg-white/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/20 flex items-center gap-2">
+                                        <i class="fa-solid fa-star text-yellow-300 text-sm"></i>
+                                        <span class="font-mono text-lg tracking-widest opacity-90 font-bold uppercase">Premium Electronics</span>
+                                    </div>
+                                    <!-- Mobi-Hub Logo (Dynamic) -->
+                                    <div id="logoContainer" class="flex items-center justify-center h-12">
+                                        <!-- Default Text Logo -->
+                                        <div id="defaultLogoText" class="font-bold-display text-4xl font-bold tracking-tighter uppercase">
+                                            mobi hub
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Center: Dynamic Content Area -->
+                                <div id="dynamicContentArea" class="flex-grow flex flex-col justify-center overflow-y-auto custom-scrollbar w-full">
+                                    <!-- Content injected via JS based on mode -->
+                                </div>
+
+                                <!-- Footer: Global Info & WhatsApp -->
+                                <div class="mt-8 pt-6 border-t border-white/20 flex flex-col items-center relative">
+                                    <div class="absolute -top-5 bg-yellow-400 text-black px-4 py-1 font-bold rounded-full shadow-lg text-sm uppercase tracking-wider">
+                                        Limited Time Offer
+                                    </div>
+                                    
+                                    <!-- Shown in Multi Mode, Hidden in Single (handled by JS) -->
+                                    <div id="footerSpecs" class="flex flex-wrap justify-center gap-3 mb-4">
+                                         <span id="previewSpec" class="px-6 py-2 bg-black/30 border border-white/20 text-white text-xl font-bold rounded-full backdrop-blur-sm">
+                                            EU Spec
+                                        </span>
+                                        <span id="previewGrade" class="px-6 py-2 bg-white/20 border border-white/20 text-white text-xl font-bold rounded-full backdrop-blur-sm uppercase">
+                                            ASIS CONDITION
+                                        </span>
+                                    </div>
+
+                                    <p id="previewNote" class="text-xl opacity-90 font-light tracking-wide mb-4">Limited Stock Available</p>
+                                    
+                                    <!-- WhatsApp Badge (Clickable Link) -->
+                                    <a id="whatsappBadge" href="#" target="_blank" class="hidden flex items-center gap-2 bg-green-500/90 text-white px-6 py-3 rounded-full backdrop-blur-sm shadow-lg transform hover:scale-105 transition hover:bg-green-500 no-underline">
+                                        <i class="fa-brands fa-whatsapp text-2xl"></i>
+                                        <span class="text-lg font-bold" id="previewWhatsapp"></span>
+                                    </a>
+                                    
+                                </div>
+                                
+                                <!-- Watermark/Footer -->
+                                <div class="absolute bottom-3 left-6 text-xs opacity-50 font-mono flex gap-4">
+                                    <span><i class="fa-solid fa-globe"></i> www.mobi-hub.com</span>
+                                </div>
+                                <div class="absolute bottom-3 right-6 text-xs opacity-40 font-mono">
+                                    ID: #<span id="randomId">8392</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Helper Text -->
+                    <div class="mt-4 bg-blue-50 text-blue-800 p-4 rounded-lg flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info mt-1"></i>
+                        <div>
+                            <p class="font-bold">Generated Text Format:</p>
+                            <p id="textFormatOutput" class="font-mono text-sm mt-1 select-all bg-white p-2 rounded border border-blue-100 break-all whitespace-pre-wrap">iPhone 16 Pro 128GB *900 €</p>
+                            <button onclick="copyText()" class="text-xs font-bold uppercase mt-2 text-blue-600 hover:underline">Copy Text</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for a device input group -->
+    <template id="device-input-template">
+        <div class="device-entry bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
+            <button onclick="removeDevice(this)" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Brand & Model -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                        <select class="brand-input w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="apple">Apple</option>
+                            <option value="samsung">Samsung</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Model Name</label>
+                        <select class="model-input w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <!-- Storage & Price -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Storage</label>
+                        <select class="storage-input w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="64GB">64GB</option>
+                            <option value="128GB" selected>128GB</option>
+                            <option value="256GB">256GB</option>
+                            <option value="512GB">512GB</option>
+                            <option value="1TB">1TB</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price / Text</label>
+                        <input type="text" class="price-input w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-600" value="900">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- Data Sources ---
+        const models = {
+            apple: [
+                "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
+                "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
+                "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
+                "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13 mini", "iPhone 13",
+                "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12", "iPhone 11",
+                "iPhone XS Max", "iPhone XR", "iPhone X", "iPhone SE (2022)"
+            ],
+            samsung: [
+                "Galaxy S24 Ultra", "Galaxy S24+", "Galaxy S24",
+                "Galaxy S23 Ultra", "Galaxy S23+", "Galaxy S23 FE",
+                "Galaxy S22 Ultra", "Galaxy S22",
+                "Galaxy Z Fold6", "Galaxy Z Flip6", "Galaxy Z Fold5", "Galaxy Z Flip5",
+                "Galaxy A55", "Galaxy A54", "Galaxy A35", "Galaxy Note 20 Ultra"
+            ]
+        };
+
+        // --- State Management ---
+        const globalInputs = {
+            spec: document.getElementById('specInput'),
+            grade: document.getElementById('gradeInput'),
+            note: document.getElementById('noteInput'),
+            bgStyle: document.getElementById('bgStyleInput'),
+            whatsapp: document.getElementById('whatsappInput'),
+            format: document.getElementById('formatInput'),
+            logo: document.getElementById('logoUpload'),
+            font: document.getElementById('fontInput'),
+            encryptMulti: document.getElementById('encryptPriceMulti')
+        };
+        
+        const singleInputs = {
+            brand: document.getElementById('singleBrand'),
+            model: document.getElementById('singleModel'),
+            storage: document.getElementById('singleStorage'),
+            price: document.getElementById('singlePrice'),
+            features: document.getElementById('singleFeatures'),
+            encrypt: document.getElementById('encryptPrice')
+        };
+
+        const previews = {
+            contentArea: document.getElementById('dynamicContentArea'),
+            footerSpecs: document.getElementById('footerSpecs'),
+            previewSpec: document.getElementById('previewSpec'),
+            previewGrade: document.getElementById('previewGrade'),
+            note: document.getElementById('previewNote'),
+            textOutput: document.getElementById('textFormatOutput'),
+            card: document.getElementById('capture-area'),
+            mainCard: document.getElementById('mainCard'),
+            whatsappBadge: document.getElementById('whatsappBadge'),
+            whatsappText: document.getElementById('previewWhatsapp'),
+            resDisplay: document.getElementById('resDisplay'),
+            container: document.getElementById('previewContainer'),
+            logoContainer: document.getElementById('logoContainer'),
+            defaultLogoText: document.getElementById('defaultLogoText'),
+            bgPattern: document.getElementById('bgPattern')
+        };
+
+        let currentTheme = 'purple';
+        let customLogoData = null;
+        let currentMode = 'single'; // 'single' or 'multi'
+        let currentFontClass = 'font-bold-display';
+
+        // --- Event Listeners ---
+        Object.values(globalInputs).forEach(input => {
+            if(input) {
+                if(input.type === 'checkbox' || input.tagName === 'SELECT') input.addEventListener('change', updatePreview);
+                else input.addEventListener('input', updatePreview);
+            }
+        });
+        
+        Object.values(singleInputs).forEach(input => {
+            if(input) {
+                if(input.type === 'checkbox') input.addEventListener('change', updatePreview);
+                else input.addEventListener('input', updatePreview);
+            }
+        });
+
+        window.addEventListener('resize', updateFormat);
+
+        // Logo Upload
+        globalInputs.logo.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customLogoData = e.target.result;
+                    updatePreview();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- Font Update ---
+        function updateFont() {
+            currentFontClass = globalInputs.font.value;
+            updatePreview();
+        }
+
+        // --- Mode Switching ---
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Toggle UI
+            const singleDiv = document.getElementById('single-mode-inputs');
+            const multiDiv = document.getElementById('multi-mode-inputs');
+            const btnSingle = document.getElementById('btn-single');
+            const btnMulti = document.getElementById('btn-multi');
+
+            if (mode === 'single') {
+                singleDiv.classList.remove('hidden');
+                multiDiv.classList.add('hidden');
+                
+                btnSingle.classList.add('bg-white', 'shadow', 'text-blue-600');
+                btnSingle.classList.remove('text-gray-500');
+                btnMulti.classList.remove('bg-white', 'shadow', 'text-blue-600');
+                btnMulti.classList.add('text-gray-500');
+            } else {
+                singleDiv.classList.add('hidden');
+                multiDiv.classList.remove('hidden');
+
+                btnMulti.classList.add('bg-white', 'shadow', 'text-blue-600');
+                btnMulti.classList.remove('text-gray-500');
+                btnSingle.classList.remove('bg-white', 'shadow', 'text-blue-600');
+                btnSingle.classList.add('text-gray-500');
+            }
+            updatePreview();
+        }
+
+        // --- Logic ---
+        function addDevice() {
+            const container = document.getElementById('devices-container');
+            const template = document.getElementById('device-input-template');
+            const clone = template.content.cloneNode(true);
+            
+            container.appendChild(clone);
+            
+            // Get the newly added entry
+            const newEntry = container.lastElementChild;
+            const brandInput = newEntry.querySelector('.brand-input');
+            const modelInput = newEntry.querySelector('.model-input');
+            const storageInput = newEntry.querySelector('.storage-input');
+            const priceInput = newEntry.querySelector('.price-input');
+            
+            // Attach listeners
+            brandInput.addEventListener('change', () => updateModelList(brandInput, modelInput));
+            [brandInput, modelInput, storageInput, priceInput].forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            // Initial model population
+            updateModelList(brandInput, modelInput);
+            updatePreview();
+        }
+
+        function removeDevice(button) {
+            const entry = button.closest('.device-entry');
+            entry.remove();
+            updatePreview();
+        }
+
+        function updateModelList(brandInput, modelInput) {
+            const brand = brandInput.value;
+            const selectedModels = models[brand] || [];
+            
+            const modelSelect = modelInput;
+            modelSelect.innerHTML = '';
+            selectedModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.innerText = model;
+                modelSelect.appendChild(option);
+            });
+            updatePreview();
+        }
+
+        function updateSingleModelList() {
+             updateModelList(singleInputs.brand, singleInputs.model);
+        }
+
+        function updateFormat() {
+            const format = globalInputs.format.value;
+            const card = previews.card;
+            const mainCard = previews.mainCard;
+            
+            let targetWidth, targetHeight, padding, cardPadding;
+            
+            if (format === 'square') {
+                targetWidth = 1080;
+                targetHeight = 1080;
+                padding = 'p-12';
+                cardPadding = 'p-10';
+            } else if (format === 'portrait') {
+                targetWidth = 1080;
+                targetHeight = 1350;
+                padding = 'p-10 py-12';
+                cardPadding = 'p-8 py-10';
+            } else if (format === 'story') {
+                targetWidth = 1080;
+                targetHeight = 1920;
+                padding = 'p-8 py-20'; // Vertical spacing optimized
+                cardPadding = 'p-8 py-16';
+            } else if (format === 'landscape') {
+                targetWidth = 1920;
+                targetHeight = 1080;
+                padding = 'p-16 py-12';
+                cardPadding = 'p-12 py-10';
+            }
+
+            card.style.width = `${targetWidth}px`;
+            card.style.height = `${targetHeight}px`;
+            card.className = card.className.replace(/p-\d+/g, '').replace(/py-\d+/g, '');
+            card.classList.add(...padding.split(' '));
+
+            mainCard.className = mainCard.className.replace(/p-\d+/g, '').replace(/py-\d+/g, '');
+            mainCard.classList.add(...cardPadding.split(' '));
+            
+            // Re-calculate zoom to fit preview area
+            const containerWidth = previews.container.offsetWidth;
+            const containerHeight = previews.container.offsetHeight;
+            const paddingOffset = 40;
+            const availW = containerWidth - paddingOffset;
+            const availH = containerHeight - paddingOffset;
+            
+            const scaleX = availW / targetWidth;
+            const scaleY = availH / targetHeight;
+            const scale = Math.min(scaleX, scaleY);
+            
+            card.style.transform = `scale(${scale})`;
+            previews.resDisplay.innerText = `${targetWidth}x${targetHeight}px`;
+        }
+
+        // Helper to adjust font size based on length
+        function getDynamicFontSize(text, baseSize, charLimit) {
+            if (!text) return baseSize;
+            if (text.length > charLimit) {
+                if (baseSize.includes('9xl')) return 'text-6xl';
+                if (baseSize.includes('12rem')) return 'text-[8rem]';
+            }
+            if (text.length > charLimit + 10) {
+                 if (baseSize.includes('9xl')) return 'text-5xl';
+                 if (baseSize.includes('12rem')) return 'text-[6rem]';
+            }
+            return baseSize;
+        }
+
+        function maskPrice(price) {
+            const priceStr = price.toString();
+            if (priceStr.match(/^\d+$/) && priceStr.length >= 2) {
+                return priceStr.substring(0, priceStr.length - 2) + "xx";
+            }
+            return priceStr;
+        }
+
+        function updatePreview() {
+            const specVal = globalInputs.spec.value;
+            const gradeVal = globalInputs.grade.value;
+            const noteVal = globalInputs.note.value;
+            const waVal = globalInputs.whatsapp.value;
+            const format = globalInputs.format.value;
+            
+            const simpleSpec = specVal.split(' ')[0];
+            const gradeMap = {
+                'NEW': 'BRAND NEW',
+                'ASIS': 'ASIS',
+                'ASIS PLUS': 'ASIS PLUS',
+                'A+': 'GRADE A+',
+                'A': 'GRADE A',
+                'B': 'GRADE B'
+            };
+            const simpleGrade = gradeMap[gradeVal] || gradeVal;
+
+            previews.contentArea.innerHTML = '';
+            let textString = `🔥 *HOT DEAL!* 🔥\n`;
+
+            if (currentMode === 'single') {
+                previews.footerSpecs.style.display = 'none';
+                
+                const sBrand = singleInputs.brand.value;
+                const sModel = singleInputs.model.value;
+                const sStorage = singleInputs.storage.value;
+                let sPrice = singleInputs.price.value;
+                const sFeatures = singleInputs.features.value;
+                const isEncrypted = singleInputs.encrypt.checked;
+
+                if (isEncrypted) sPrice = maskPrice(sPrice);
+
+                const modelFontSize = getDynamicFontSize(sModel, 'text-9xl', 12);
+                const priceFontSize = getDynamicFontSize(sPrice, 'text-[12rem]', 4);
+
+                const brandIcons = {
+                    'apple': '<i class="fa-brands fa-apple"></i>',
+                    'samsung': '<span style="font-family: sans-serif;">SAMSUNG</span>'
+                };
+                const iconHtml = brandIcons[sBrand] || '<i class="fa-solid fa-mobile"></i>';
+
+                const featureList = sFeatures.split(',').filter(f => f.trim() !== '');
+                let featureHtml = '';
+                if(featureList.length > 0) {
+                    featureHtml = `<div class="flex flex-wrap justify-center gap-4 my-6">` + 
+                        featureList.map(f => `
+                            <span class="px-5 py-2 bg-white/10 border border-white/20 rounded-full text-lg font-bold backdrop-blur-md shadow-sm ${currentFontClass}">
+                                <i class="fa-solid fa-check text-green-400 mr-2"></i>${f.trim()}
+                            </span>
+                        `).join('') + `</div>`;
+                }
+
+                previews.contentArea.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-center w-full">
+                        <div class="text-8xl opacity-20 mb-[-40px] animate-pulse">${iconHtml}</div>
+                        <h1 class="${currentFontClass} ${modelFontSize} font-bold uppercase tracking-tight leading-none drop-shadow-2xl mb-4 z-10 w-full break-words px-4">${sModel}</h1>
+                        
+                        <div class="flex gap-4 mb-8">
+                             <span class="px-8 py-3 bg-white text-gray-900 text-4xl font-bold rounded-xl shadow-xl z-10 ${currentFontClass}">
+                                ${sStorage}
+                            </span>
+                            <span class="px-8 py-3 bg-black/40 border border-white/30 text-white text-4xl font-bold rounded-xl backdrop-blur-sm z-10 ${currentFontClass}">
+                                ${simpleSpec}
+                            </span>
+                        </div>
+                        
+                         <span class="inline-block px-10 py-3 border-4 border-white rounded-full text-5xl font-bold tracking-widest uppercase bg-white/10 mb-6 shadow-lg z-10 ${currentFontClass}">
+                            ${simpleGrade}
+                        </span>
+
+                        ${featureHtml}
+
+                        <div class="mt-auto mb-4 bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-2xl transform hover:scale-105 transition duration-500">
+                             <div class="text-2xl uppercase tracking-widest opacity-80 mb-2 ${currentFontClass}">Special Price</div>
+                             <div class="flex items-start justify-center text-yellow-300 drop-shadow-xl">
+                                <span class="text-6xl mt-4 mr-2 ${currentFontClass}">€</span>
+                                <span class="${currentFontClass} ${priceFontSize} leading-none font-bold">${sPrice}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                textString += `📱 ${sModel} ${sStorage} | ${simpleGrade} | ${simpleSpec}\n`;
+                if(sFeatures) textString += `✨ ${sFeatures}\n`;
+                textString += `💰 Price: ${sPrice} €\n`;
+
+            } else {
+                previews.footerSpecs.style.display = 'flex';
+                const isMultiEncrypted = globalInputs.encryptMulti.checked;
+                const deviceEntries = document.querySelectorAll('.device-entry');
+                const devices = Array.from(deviceEntries).map(entry => ({
+                    brand: entry.querySelector('.brand-input').value,
+                    model: entry.querySelector('.model-input').value,
+                    storage: entry.querySelector('.storage-input').value,
+                    price: entry.querySelector('.price-input').value
+                }));
+
+                const count = devices.length;
+                let itemClass = "p-3 mb-3"; 
+                let titleClass = "text-3xl";
+                let priceClass = "text-5xl";
+                let iconClass = "text-2xl";
+                
+                // Adjust layout for Story vs Landscape vs Portrait
+                // Tall formats (Story, Portrait) benefit from more spacing
+                const isTall = (format === 'story' || format === 'portrait');
+                
+                if (count > 8) {
+                    itemClass = isTall ? "p-3 mb-3" : "p-1 mb-1";
+                    titleClass = isTall ? "text-3xl" : "text-xl";
+                    priceClass = isTall ? "text-5xl" : "text-2xl";
+                    iconClass = isTall ? "text-2xl" : "text-lg";
+                } else if (count > 5) {
+                    itemClass = "p-2 mb-2";
+                    titleClass = "text-2xl";
+                    priceClass = "text-3xl";
+                }
+
+                textString += `Condition: ${simpleGrade} | Spec: ${simpleSpec}\n\n`;
+
+                devices.forEach(device => {
+                    let displayPrice = device.price;
+                    if(isMultiEncrypted) displayPrice = maskPrice(displayPrice);
+
+                    const deviceEl = document.createElement('div');
+                    deviceEl.className = `device-item flex justify-between items-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 ${itemClass} ${currentFontClass}`;
+                    
+                    const brandIcons = {
+                        'apple': `<i class="fa-brands fa-apple ${iconClass}"></i>`,
+                        'samsung': `<span class="font-bold tracking-tighter ${iconClass}" style="font-family: sans-serif;">SAM</span>`
+                    };
+
+                    deviceEl.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="opacity-90 w-10 text-center">${brandIcons[device.brand] || brandIcons['apple']}</div>
+                            <div>
+                                <h3 class="font-bold uppercase tracking-tight leading-none ${titleClass}">${device.model}</h3>
+                                <span class="text-sm opacity-80 font-mono bg-white/20 px-2 py-0.5 rounded">${device.storage}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-lg mt-1 mr-1 opacity-80">€</span>
+                            <span class="font-bold tracking-tighter ${priceClass}">${displayPrice}</span>
+                        </div>
+                    `;
+                    previews.contentArea.appendChild(deviceEl);
+                    const simpleStorage = device.storage.replace('GB', '').replace('TB', 'TB');
+                    textString += `📱 ${device.model} ${simpleStorage} ➡️ *${displayPrice} €*\n`;
+                });
+            }
+
+            previews.previewSpec.innerText = simpleSpec.replace(' Spec', '');
+            previews.previewGrade.innerText = simpleGrade;
+            previews.note.innerText = noteVal;
+
+            if (customLogoData) {
+                previews.logoContainer.innerHTML = `<img src="${customLogoData}" class="h-12 w-auto object-contain drop-shadow-lg rounded-lg">`;
+            } else {
+                previews.logoContainer.innerHTML = `<div class="${currentFontClass} text-4xl font-bold tracking-tighter uppercase drop-shadow-lg">mobi hub</div>`;
+            }
+
+            if (waVal && waVal.trim() !== '') {
+                previews.whatsappBadge.classList.remove('hidden');
+                previews.whatsappText.innerText = waVal;
+                const cleanNum = waVal.replace(/[^0-9]/g, '');
+                previews.whatsappBadge.href = `https://wa.me/${cleanNum}`;
+                textString += `\n💬 Chat: https://wa.me/${cleanNum}`;
+            } else {
+                previews.whatsappBadge.classList.add('hidden');
+            }
+            
+            if (noteVal) textString += `\nNote: ${noteVal}`;
+            previews.textOutput.innerText = textString;
+            
+            setTimeout(updateFormat, 50);
+        }
+
+        // Theme Change
+        function changeTheme(color) {
+            currentTheme = color;
+            updateBackground();
+        }
+
+        function updateBackground() {
+            const style = globalInputs.bgStyle.value;
+            const card = previews.card;
+            
+            // Cleanup
+            card.classList.remove('bg-white', 'text-gray-900', 'bg-gray-950');
+            card.className = card.className.replace(/bg-gradient-to-br from-\w+(-\d+)? via-\w+(-\d+)? to-\w+(-\d+)?/g, '');
+            previews.bgPattern.className = 'absolute inset-0 opacity-30';
+            
+            const gradients = {
+                // Original
+                'blue': 'from-blue-500 via-cyan-500 to-blue-700',
+                'purple': 'from-indigo-500 via-purple-500 to-pink-500', 
+                'teal': 'from-teal-400 via-emerald-500 to-green-600',
+                'green': 'from-emerald-500 via-green-600 to-teal-700',
+                'gold': 'from-yellow-400 via-orange-300 to-yellow-600',
+                'red': 'from-red-500 via-rose-500 to-orange-600',
+                'rose': 'from-rose-500 via-pink-500 to-fuchsia-600',
+                'pink': 'from-pink-500 via-purple-500 to-indigo-500',
+                'orange': 'from-orange-500 via-amber-500 to-yellow-500',
+                'cyan': 'from-cyan-500 via-sky-500 to-blue-500',
+                'midnight': 'from-slate-900 via-indigo-900 to-slate-800',
+                'slate': 'from-slate-600 via-gray-600 to-zinc-700',
+                'black': 'from-gray-900 via-gray-800 to-black',
+                
+                // New Promotional Colors
+                'crimson': 'from-red-600 via-red-500 to-pink-600',
+                'cyber': 'from-cyan-500 via-blue-600 to-fuchsia-600',
+                'lemon': 'from-yellow-400 via-lime-500 to-green-600',
+                'coral': 'from-orange-400 via-rose-400 to-pink-500',
+                'lavender': 'from-indigo-300 via-purple-400 to-fuchsia-400',
+                'royal': 'from-blue-800 via-indigo-800 to-purple-900',
+                'mint': 'from-teal-300 via-emerald-400 to-green-500',
+                'bronze': 'from-orange-700 via-yellow-800 to-orange-900',
+                'steel': 'from-gray-400 via-slate-500 to-zinc-600',
+                'candy': 'from-pink-400 via-purple-400 to-cyan-400',
+            };
+
+            const solidColors = {
+                // Original
+                'blue': 'bg-blue-600', 'purple': 'bg-indigo-600', 'teal': 'bg-teal-600',
+                'green': 'bg-emerald-600', 'gold': 'bg-yellow-600', 'red': 'bg-red-600',
+                'rose': 'bg-rose-600', 'pink': 'bg-pink-600', 'orange': 'bg-orange-600',
+                'cyan': 'bg-cyan-600', 'midnight': 'bg-indigo-900', 'slate': 'bg-slate-600',
+                'black': 'bg-gray-900',
+                
+                // New
+                'crimson': 'bg-red-700', 'cyber': 'bg-fuchsia-600', 'lemon': 'bg-lime-500',
+                'coral': 'bg-orange-400', 'lavender': 'bg-violet-400', 'royal': 'bg-blue-900',
+                'mint': 'bg-emerald-400', 'bronze': 'bg-yellow-800', 'steel': 'bg-slate-500',
+                'candy': 'bg-pink-500',
+            };
+
+            if (style === 'solid') {
+                card.classList.add('bg-white');
+                card.classList.add(solidColors[currentTheme] || 'bg-gray-900');
+                previews.bgPattern.classList.add('hidden');
+            } else if (style === 'dark') {
+                 card.classList.add('bg-gray-950');
+                 previews.bgPattern.classList.add('pattern-grid');
+            } else if (style === 'mesh') {
+                card.classList.add('bg-gradient-to-br');
+                card.classList.add(...gradients[currentTheme].split(' '));
+                previews.bgPattern.classList.add('pattern-grid'); 
+            } else if (style === 'neon') {
+                card.classList.add('bg-gray-950');
+                card.style.boxShadow = `0 0 50px -10px ${getComputedStyle(document.body).getPropertyValue('--color-'+currentTheme+'-500')}`;
+                previews.bgPattern.classList.add('pattern-grid');
+            } else if (style === 'geometric') {
+                card.classList.add('bg-gradient-to-br');
+                card.classList.add(...gradients[currentTheme].split(' '));
+                previews.bgPattern.classList.add('pattern-geo');
+            } else if (style === 'pastel') {
+                card.classList.add('bg-gradient-to-tr');
+                card.classList.add('from-white', 'via-'+currentTheme+'-200', 'to-'+currentTheme+'-300');
+            } else {
+                card.classList.add('bg-gradient-to-br');
+                card.classList.add(...gradients[currentTheme].split(' '));
+                previews.bgPattern.classList.add('pattern-grid');
+            }
+        }
+
+        function downloadImage() {
+            const captureArea = document.getElementById('capture-area');
+            const btn = document.getElementById('downloadBtnBottom');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            const width = captureArea.offsetWidth;
+            const height = captureArea.offsetHeight;
+
+            html2canvas(captureArea, {
+                scale: 1, // Use 1 to respect exact pixel dimensions requested
+                backgroundColor: null, 
+                useCORS: true, 
+                logging: false,
+                width: width,
+                height: height,
+                onclone: (clonedDoc) => {
+                    const clonedArea = clonedDoc.getElementById('capture-area');
+                    clonedArea.style.transform = 'none'; 
+                    clonedArea.style.margin = '0';
+                }
+            }).then(canvas => {
+                const image = canvas.toDataURL("image/jpeg", 0.95);
+                const link = document.createElement('a');
+                let filename = "Deal_Template.jpg";
+                if (currentMode === 'single') {
+                    const m = singleInputs.model.value || 'Device';
+                    filename = `MobiHub_${m.replace(/\s+/g, '_')}_Single.jpg`;
+                } else {
+                    const count = document.querySelectorAll('.device-entry').length;
+                    filename = `MobiHub_${count}_Devices_List.jpg`;
+                }
+                
+                link.download = filename;
+                link.href = image;
+                link.click();
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showStatus('Image downloaded successfully!', 'bg-green-100 text-green-800');
+            }).catch(err => {
+                console.error(err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showStatus('Error generating image.', 'bg-red-100 text-red-800');
+            });
+        }
+
+        function copyText() {
+            const text = previews.textOutput.innerText;
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
+            textarea.style.top = "0";
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showStatus('Text copied to clipboard!', 'bg-blue-100 text-blue-800');
+                } else {
+                    showStatus('Copy failed.', 'bg-red-100 text-red-800');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+                showStatus('Error copying text.', 'bg-red-100 text-red-800');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showStatus(msg, classes) {
+            const el = document.getElementById('statusMessage');
+            el.innerText = msg;
+            el.className = `mt-2 p-3 rounded-lg text-center text-sm font-medium ${classes}`;
+            el.classList.remove('hidden');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 3000);
+        }
+
+        document.getElementById('randomId').innerText = Math.floor(1000 + Math.random() * 9000);
+        
+        // Init
+        updateSingleModelList();
+        addDevice(); 
+        setMode('single');
+        
+        // Need to wait for layout paint to calculate scale correctly
+        setTimeout(updateFormat, 100); 
+
+    </script>
+</body>
+</html>
